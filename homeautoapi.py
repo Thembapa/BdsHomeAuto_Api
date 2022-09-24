@@ -1,15 +1,16 @@
-from twilio.rest import Client 
+import json
+import os
+from flask import Flask, render_template, session, redirect, request, send_from_directory, url_for
 import bdsconfig
+
+#Application variables 
+app = Flask(__name__, static_url_path='')
+app.secret_key = "kasivoretest"
  
-account_sid = bdsconfig.account_sid
-auth_token = bdsconfig.auth_token
-client = Client(account_sid, auth_token) 
- 
-#send msg 
-message = client.messages.create(  
-                              messaging_service_sid=bdsconfig.msg_serviceID, 
-                              body='Alerm triggered at house 145 Tembisa street',      
-                              to='+27742280003' 
-                          ) 
- 
-print(message.sid)
+
+
+@app.route('/device_status')
+def device_status():
+    
+   
+    return json.dump()
