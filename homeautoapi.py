@@ -2,6 +2,10 @@ import json
 import os
 from flask import Flask, render_template, session, redirect, request, send_from_directory, url_for
 import bdsconfig
+import random
+from datetime import datetime
+import homeautodata
+import notifications
 
 #Application variables 
 app = Flask(__name__, static_url_path='')
@@ -17,6 +21,64 @@ def device_status():
     
     
     return json.dumps(db_status)
+
+@app.route('/zone_alert')
+def zone_alert():
+    req = request.get_json()
+    OTP = random.randint(1000, 9999)
+    zone_id = req.get('ZoneID')
+    fn_parameters={'_zoneid':zone_id,'_otp':OTP,'_generateddate':datetime.now()}
+    AlertID= homeautodata.pgsql_get_scalar('homeauto','fn_alert_log',fn_parameters)
+    zone_details= homeautodata.pgsql_call_Tablefunction_P('homeauto','fn_get_zone',{'_ZoneID':int(zone_id)})[0]
+    #send SMS
+    body= 'Alert! {} at {} has been triggred, please follow the link to deactivate {}. OTP: {}'.format(zone_details[1],zone_details[2],'test.link',OTP)
+    numbrs=['+27742280003','+27738195149']
+    notifications.sendsms(1,body,numbrs)
+    
+    resp = {'AlertID':AlertID}
+    print(resp)    
+    
+    return json.dumps(resp)
+
+
+@app.route('/alert_status')
+def alert_status():
+    req = request.get_json()
+    AlertID = req.get('AlertID')
+    fn_parameters={'_AlertID':AlertID}
+    Status_check= homeautodata.pgsql_call_Tablefunction_P('homeauto','fn_alert_checkStatus',fn_parameters)[0]
+    if int(Status_check[7])>2:
+        api_alert_deactivate(AlertID, 1)
+        Status_check= homeautodata.pgsql_call_Tablefunction_P('homeauto','fn_alert_checkStatus',fn_parameters)[0]
+    
+    resp = {'IsDeactivated':Status_check[8]}
+    print(resp)    
+    
+    return json.dumps(resp)
+
+@app.route('/alert_deactivate')
+def alert_deactivate():
+    req = request.get_json()
+    AlertID = req.get('AlertID')
+    UserID = req.get('UserID')
+    api_alert_deactivate(AlertID, UserID)
+
+    fn_parameters={'_AlertID':AlertID}
+    Status_check= homeautodata.pgsql_call_Tablefunction_P('homeauto','fn_alert_checkStatus',fn_parameters)[0]
+
+    resp = {'IsDeactivated':Status_check[8]}
+    print(resp)    
+    
+    return json.dumps(resp)
+
+#In API fuction
+def api_alert_deactivate(alertid, userid):
+    req = request.get_json()
+    AlertID = req.get('AlertID')
+    fn_parameters={'_AlertID':AlertID,'_UserID':userid}
+    DeactivatedID = homeautodata.pgsql_call_Tablefunction_P('homeauto','fn_alert_Deactivate',fn_parameters)
+    print(DeactivatedID)
+    
 
 @app.route('/')
 @app.route('/index')
