@@ -1,3 +1,9 @@
+""" 
+Created By: Themba Pakula
+Description: This module is used to manage connetion to the database\s for data for read and manupulation
+"""
+
+
 import psycopg2 as psycopg2
 import bdsconfig
 
@@ -33,6 +39,8 @@ def pgsql_get_scalar(schema, fn_name, paramenters):
         con_postgresql.commit()
         value = user_record
     except Exception as e:
+        mycursor.close()
+        con_postgresql.commit()
         print(e)
     return value[0]
 
@@ -57,6 +65,8 @@ def pgsql_call_SP(schema, sp_name, paramenters):
         mycursor.close()
         con_postgresql.commit()
     except Exception as e:
+        mycursor.close()
+        con_postgresql.commit()
         print(e)
 
 
@@ -83,6 +93,8 @@ def pgsql_call_Tablefunction_P(schema, fn_name, paramenters):
         mycursor.close()
         con_postgresql.commit()
     except Exception as e:
+        mycursor.close()
+        con_postgresql.commit()
         print(e)
     return DataSet
 
@@ -104,6 +116,8 @@ def pgsql_call_Tablefunction(schema, fn_name):
         con_postgresql.commit()
 
     except Exception as e:
+        mycursor.close()
+        con_postgresql.commit()
         print(e)
 
     return DataSet
@@ -127,6 +141,8 @@ def pgsql_call_FromTable(schema, TableName):
         con_postgresql.commit()
 
     except Exception as e:
+        mycursor.close()
+        con_postgresql.commit()
         print(e)
 
     return DataSet
