@@ -19,21 +19,24 @@ def pgsql_get_scalar(schema, fn_name, paramenters):
     value = 0
     fn_parameters = ''
     Sp_QueryStr = ''
+    Fn_Values=[]
     ##Get Parameters
 
     try:
         for par in paramenters:
             if fn_parameters == '':
-                fn_parameters = fn_parameters + par + ":= '{value}'".format(value= paramenters[par])
+                fn_parameters = fn_parameters + par + ":= %s"
+                Fn_Values.append(paramenters[par])
             else:
-                fn_parameters = fn_parameters + ',' + par + ":= '{value}'".format(value= paramenters[par])
+                fn_parameters = fn_parameters + ',' + par + ":= %s"
+                Fn_Values.append(paramenters[par])
 
         Sp_QueryStr = 'SELECT {schema}.{function} ({params})'.format(schema='"' + schema + '"', function=fn_name, params=fn_parameters)
         #print(Sp_QueryStr)
 
         ##Sql Call
         mycursor = con_postgresql.cursor()
-        mycursor.execute(Sp_QueryStr)
+        mycursor.execute(Sp_QueryStr,Fn_Values)
         user_record = mycursor.fetchone()
         mycursor.close()
         con_postgresql.commit()
@@ -45,23 +48,28 @@ def pgsql_get_scalar(schema, fn_name, paramenters):
     return value[0]
 
 
+
 #This is void SP, can be used for inserts and updates
 def pgsql_call_SP(schema, sp_name, paramenters):
     fn_parameters = ''
     Sp_QueryStr = ''
+    Fn_Values=[]
     ##Get Parameters
     try:
         for par in paramenters:
             if fn_parameters == '':
-                fn_parameters = fn_parameters + par + ":= '{value}'".format(value=paramenters[par])
+                fn_parameters = fn_parameters + par + ":=  %s"
+                Fn_Values.append(paramenters[par])
+
             else:
-                fn_parameters = fn_parameters + ',' + par['name'] + ":= '{value}'".format(value=par['value'])
+                fn_parameters = fn_parameters + ',' + par['name'] + ":=  %s"
+                Fn_Values.append(paramenters[par])
 
         Sp_QueryStr = 'call {schema}.{sp} ({params})'.format(schema='"' + schema + '"', sp=sp_name, params=fn_parameters)
         #print(Sp_QueryStr)
         ##Sql Call
         mycursor = con_postgresql.cursor()
-        mycursor.execute(Sp_QueryStr)
+        mycursor.execute(Sp_QueryStr,Fn_Values)
         mycursor.close()
         con_postgresql.commit()
     except Exception as e:
@@ -75,20 +83,23 @@ def pgsql_call_Tablefunction_P(schema, fn_name, paramenters):
     fn_parameters = ''
     DataSet = []
     fn_QueryStr = ''
+    Fn_Values=[]
     ##Get Parameters
     try:
         for par in paramenters:
             if fn_parameters == '':
-                fn_parameters = fn_parameters + par + ":= '{value}'".format(value=paramenters[par])
+                fn_parameters = fn_parameters + par + ":=  %s"
+                Fn_Values.append(paramenters[par])
             else:
-                fn_parameters = fn_parameters + ',' + par + ":= '{value}'".format(value=paramenters[par])
+                fn_parameters = fn_parameters + ',' + par + ":=  %s"
+                Fn_Values.append(paramenters[par])
 
         fn_QueryStr = 'SELECT * FROM {schema}.{function} ({params})'.format(schema='"' + schema + '"', function=fn_name,
                                                                             params=fn_parameters)
         #print(fn_QueryStr)
         ##Sql Call
         mycursor = con_postgresql.cursor()
-        mycursor.execute(fn_QueryStr)
+        mycursor.execute(fn_QueryStr,Fn_Values)
         DataSet = mycursor.fetchall()
         mycursor.close()
         con_postgresql.commit()
@@ -97,7 +108,6 @@ def pgsql_call_Tablefunction_P(schema, fn_name, paramenters):
         con_postgresql.commit()
         print(e)
     return DataSet
-
 
 # this table vale function takes a schema name as string and function name as string returns Dataset
 def pgsql_call_Tablefunction(schema, fn_name):

@@ -7,12 +7,41 @@ Description: This modeule is resposible for granting users access to the system.
 from cryptography.fernet import Fernet
 import homeautodata
 import systemErrors
+import secrets
+import string
 
 #Generate keys for encryption
 def generate_key():
     key = Fernet.generate_key()
 
     return key
+
+def password_generator():
+    # define the alphabet
+    letters = string.ascii_letters
+    digits = string.digits
+    special_chars = string.punctuation
+
+    alphabet = letters + digits + special_chars
+
+    # fix password length
+    pwd_length = 12
+
+    # generate a password string
+    pwd = ''
+    for i in range(pwd_length):
+        pwd += ''.join(secrets.choice(alphabet))
+
+    # generate password meeting constraints
+    while True:
+        pwd = ''
+        for i in range(pwd_length):
+            pwd += ''.join(secrets.choice(alphabet))
+
+        if (any(char in special_chars for char in pwd) and 
+            sum(char in digits for char in pwd)>=2):
+                break
+    return pwd
 
 def validate_device():
     device_list= [{'Device_ID':1,'Device_SID':'TZmPErE3koWuArfPPesdOFOHsV_ViTc5V8QVM58NTxs=','DeviceName':'BDS100','Model':'2022','Zone':'Zone1'}

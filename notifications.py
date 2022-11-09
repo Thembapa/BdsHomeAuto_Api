@@ -1,11 +1,11 @@
 from twilio.rest import Client 
-import smtplib
+import smtplib, ssl
 from email.mime.text import MIMEText
 from email.message import EmailMessage
 import bdsconfig
 #Global Varibales
-account_sid = bdsconfig.account_sid
-auth_token = bdsconfig.auth_token
+account_sid = bdsconfig.ACCOUNT_SID
+auth_token = bdsconfig.AUTH_TOCKET
 client = Client(account_sid, auth_token) 
 
 #send msg to sms list
@@ -13,7 +13,7 @@ def sendsms(smsType,body,numbrs):
     if smsType==1:
         for number in numbrs:
             message = client.messages.create(  
-                                        messaging_service_sid=bdsconfig.msg_serviceID, 
+                                        messaging_service_sid=bdsconfig.MSG_SERVICE_ID, 
                                         body=body,      
                                         to=number 
                                     ) 
@@ -21,101 +21,37 @@ def sendsms(smsType,body,numbrs):
             print(message.sid)
 
 #Send email to a mailing list
-def sendemail(mailingList,msg,file=None):
-    print(mailingList,msg)
-
-
-def sendmail(usubject, _msg, emaillist,_htmlBody =''):
-    server = smtplib.SMTP_SSL(configfile.EMAIL_SERVER, configfile.EMAIL_PORT)
-
-    # Next, log in to the server
-    server.login(configfile.EMAIL_USER, configfile.EMAIL_PASS)
-
-    # msg = MIMEText("""Hi, \n\n I think this will work. \n\n Regards""")
-    msg = EmailMessage()    
-    sender = configfile.EMAIL_USER
-    recipients = emaillist.split(",")
+def sendmail(usubject, message, emaillist,htmlBody =''):
+    
+    sender = bdsconfig.EMAIL_USER
+    receivers = emaillist
+    body_of_email = message
+    msg = MIMEText(body_of_email, 'plain')
+    # html_body_of_email = '<h1>The html body of the email</h1>'
+    # msg = MIMEText(html_body_of_email, 'html')
     msg['Subject'] = usubject
     msg['From'] = sender
-    msg['To'] = ", ".join(recipients)
-    msg.set_content(_msg)
+    msg['To'] = ','.join(receivers)
 
-      
-    _html = """\
-       <!doctype html>
+    s = smtplib.SMTP_SSL(host = bdsconfig.EMAIL_SERVER, port = 465)
+    s.login(user = bdsconfig.EMAIL_USER, password = bdsconfig.EMAIL_PASS)
+    s.sendmail(sender, receivers, msg.as_string())
+    s.quit()
 
-            <html lang="en">
-            <head>
-            <meta charset="utf-8">
-            
-            <style>
-                .Header
-                {
-                    width: 100%;  
-                    height: 100px;   
-                    float: left;
-                }
-                .HeaderImage
-                {
-                    width: 100%; 
-                    height: 100px;
-                }
-                .btnStyle
-                {
-                    background-color: #be222f; /* Green */
-                    border: none;
-                    color: white;
-                    padding: 15px 32px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    position: relative;
-                    margin-left: 25%;
-                    font-size: 16px;
-                }
-                @media screen and (max-width: 767px) {
-                .HeaderImage
-                {
-                    height: 50px;
-                }
-                }
-                
-                
-            </style>
-            </head>
 
-            <body>
-            <div class="Header">
-                <img src="https://kasivore.com/images/Backgroud/Headerbackgroud.jpg" class="HeaderImage">
-            </div>
-            <div class="maindiv">
-                <div class="Content">
-                
-                <p>"""+_htmlBody + """
-                
-
-                </p>
-                </div>
-            </div>
-            
-                
-            </div>
-            </body>
-            </html>
-        """
-    if _htmlBody !='':
-        msg.add_alternative(_html, subtype= 'html')
-
-    server.sendmail(sender, recipients, msg.as_string())
 def sendWelcome_msg(email,tocken):
     msg='''Hi,\n\n
 Thank you for signing up with BDS home Auto. Just few more steps and you are done.\n
 Please follow the link below to verify your email Address\n
-link:www.google.com\n\n
-tocken: {}
+link:https://safety.bdstech.co.za/accountverification/{}\n\n
+
 
 NB: Your acount will only be active once you email is veryfied. \n
-The account will be deleted autmatically should the email not be verified withing 7 days
+The account will be deleted autmatically should the email not be verified withing 7 days\n\n
+
+Kind Regards 
+BDS Team
     '''.format(tocken)
     
-    sendemail(email,msg)
+    sendmail('Email Verification',msg,email)
+

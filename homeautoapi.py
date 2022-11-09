@@ -97,12 +97,11 @@ def createAccount():
         CreateStatus={'SID':'','Status':0,'StatusDescription':'Account creation failed'}#0: Account creation failed, 1:Account created ,2:Invalid SID
         RequestSID = req.get('SID')
         CreateStatus['SID']=RequestSID
-        print('RequestSID: ',CreateStatus['SID'])
         if (authentication.validate_SID(RequestSID)):
             req_Data = req.get('Data')
             Email = authentication.decryptData(RequestSID,req_Data.get('Email'))
             password= authentication.decryptData(RequestSID,req_Data.get('Password'))
-            password = authentication.encryptData(bdsconfig.HomeAutoApi_sid,password) #encrypt with api key
+            password = authentication.encryptData(bdsconfig.HOME_AUTO_API_SID,password) #encrypt with api key
             AccountType = req_Data.get('AccountType')
             if (UserAccount.createAccout(Email,password,AccountType)):                
                 CreateStatus['Status']=1
@@ -117,6 +116,27 @@ def createAccount():
         return json.dumps({'Error':str(ex)})
         
     return json.dumps(CreateStatus)
+
+#Verify email Addresss
+@app.route('/emailverification', methods=['GET', 'POST'])
+def emailverification():
+    try:
+        req = request.get_json()       
+        Verification_status={'SID':'','IsValidated': False}
+        RequestSID = req.get('SID')
+        Verification_status['SID']=RequestSID
+        if (authentication.validate_SID(RequestSID)):
+            req_Data = req.get('Data')
+            VerificationCode = req_Data.get('VerificationCode')
+          
+            if (UserAccount.accountverification(VerificationCode)):                
+                Verification_status['IsValidated']=True
+                
+    except Exception as ex:
+        systemErrors.sendErroToSupport('homeautoapi','createAccount',ex)
+        return json.dumps({'Error':str(ex)})
+        
+    return json.dumps(Verification_status)
     
 
 @app.route('/')
