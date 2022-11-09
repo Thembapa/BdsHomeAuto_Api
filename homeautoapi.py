@@ -138,6 +138,28 @@ def emailverification():
         
     return json.dumps(Verification_status)
     
+#Get existing accounts
+@app.route('/getaccounts', methods=['GET', 'POST'])
+def getaccounts():
+    try:
+        req = request.get_json()  
+        Account_return=[]
+        RequestSID = req.get('SID')
+       
+        if (authentication.validate_SID(RequestSID)):
+            user_emails = UserAccount.get_existing_accounts()
+            
+            accounts = []
+            for email in user_emails:               
+                accounts.append(authentication.encryptData(RequestSID,email[0]))
+            Account_return= accounts
+
+                
+    except Exception as ex:
+        systemErrors.sendErroToSupport('homeautoapi','createAccount',ex)
+        return json.dumps({'Error':str(ex)})
+        
+    return json.dumps(Account_return)
 
 @app.route('/')
 @app.route('/index')

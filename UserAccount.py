@@ -47,3 +47,14 @@ def accountverification(verificationcode):
     except Exception as ex:
         systemErrors.sendErroToSupport('UserAccounts','accountverification',ex)
     return Isvalid
+
+
+#get existing account emails to validate new if new account is not already rigistered
+def get_existing_accounts():
+    accounts= []
+    try:
+        accounts = homeautodata.pgsql_call_Tablefunction('homeauto','fn_get_emails')
+    except Exception as ex:
+        systemErrors.sendErroToSupport('UserAccounts','get_existing_accounts',ex)
+    return accounts
+
